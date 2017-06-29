@@ -5,7 +5,7 @@ const ctx = canvas.getContext('2d');
 const width = window.innerWidth;
 const height = window.innerHeight;
 const margin = 20;
-const size = 16;
+const size = 16;//棋盘大小
 const PI_2 = Math.PI * 2;
 var square = Math.min(width,height) - margin * 2;
 var lineSize = Math.floor(square/size);
@@ -69,6 +69,7 @@ canvas.addEventListener('mousemove',function(e){
 	}
 });
 
+//检查结果
 function checkChess(item){
 	var col = item.col;
 	var row = item.row;
@@ -78,15 +79,17 @@ function checkChess(item){
 	var p1 = checkItem(col, row, type, function(i){
 		return [
 			(i - 1) + '_' + row,//上一个
-			i + '_' + row //当前
+			i + '_' + row, //当前
+			(i + 1) + '_' + row //下一个
 		]
 	});
 
 	//垂直方向
 	var p2 = checkItem(col, row, type, function(i){
 		return [
-			col + '_' + (i - 1),//上一个
-			col + '_' + i //当前
+			col + '_' + (i - 1),
+			col + '_' + i,
+			col + '_' + (i + 1)
 		]
 	});
 
@@ -94,23 +97,26 @@ function checkChess(item){
 	var p3 = checkItem(col, row, type, function(i){
 		var temp = col - row;
 		return [
-			(i - 1 + temp) + '_' + (i - 1),//上一个
-			(i + temp) + '_' + (i) //当前
+			(i - 1 + temp) + '_' + (i - 1),
+			(i + temp) + '_' + (i),
+			(i + 1 + temp) + '_' + (i + 1)
 		]
 	});
 
 	//右上
 	var p4 = checkItem(col, row, type, function(i){
 		return [
-			(col - i + 1) + '_' + (row + i - 1),//上一个
-			(col - i) + '_' + (row + i) //当前
+			(col - i + 1) + '_' + (row + i - 1),
+			(col - i) + '_' + (row + i),
+			(col - i - 1) + '_' + (row + i + 1)
 		]
 	});
 	//右下
 	var p5 = checkItem(col, row, type, function(i){
 		return [
-			(col + i + 1) + '_' + (row - i - 1),//上一个
-			(col + i) + '_' + (row - i) //当前
+			(col + i + 1) + '_' + (row - i - 1),
+			(col + i) + '_' + (row - i),
+			(col + i - 1) + '_' + (row - i + 1)
 		]
 	});
 	var result = p1 || p2 || p3 || p4 || p5;
@@ -127,20 +133,25 @@ function checkChess(item){
 
 }
 
+//检查当前位置
 function checkItem(col, row, type, fun){
-	var flag = 1;
-	var win = [col+'_'+row];
-	var i = lineSize;
-	while(i--){
+	var flag = 0;
+	var win = [];
+	for(var i = 0;i<=lineSize;i++){
 		var keys = fun(i);
 		var pre_key = keys[0];
 		var key = keys[1];
-		if(chess[key]==undefined || chess[pre_key]==undefined)continue;
-		if(chess[key] && chess[pre_key] && chess[key].type == type && chess[pre_key].type==type){
+		var next_key = keys[2];
+		if(!chess[key])continue;
+		if(chess[key].type != type && flag<5){
+			flag = 0;
+		}
+		var isTyped = chess[key].type == type;
+		var isPre = chess[pre_key] && chess[pre_key].type == type;
+		var isNext = chess[next_key] && chess[next_key].type == type;
+		if(isTyped  && (isPre || isNext)){
 			win.push(key);
 			flag+=1;
-		}else{
-			flag = 1;
 		}
 	}
 	return flag>=5 ? {win:win,type:type} : false;
@@ -166,6 +177,7 @@ function markChess(item){
 	ctx.fill();
 }
 
+//棋盘线
 function drawLine(){
 	ctx.setTransform(1,0,0,1,0.5,0.5);
 	ctx.lineWidth = 1;
@@ -186,6 +198,7 @@ function drawLine(){
 	ctx.stroke();
 }
 
+//显示标记
 function markPosition(pos){
 	var x = pos[0];
 	var y = pos[1];
